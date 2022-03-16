@@ -171,7 +171,7 @@ public class Mock<Target> {
             }
         }
 
-        public func withSignature<T1, T2, T3, R>(_ signature: (Target) -> (T1, T2, T3) -> R) -> SignedGivenBuilder<(T1, T2, T3) -> R, R> {
+        public func withSignature<T1, T2, T3, R>(_ signature: @escaping (Target) -> (T1, T2, T3) -> R) -> SignedGivenBuilder<(T1, T2, T3) -> R, R> {
             withSignatureBuilder { block in
                 { args in block(args[0] as! T1, args[1] as! T2, args[2] as! T3) }
             }
@@ -250,8 +250,8 @@ public class Mock<Target> {
                 {args in
                     block(
                         args[0] as! T1,
-                        cast(args[1]),
-                        cast(args[2])
+                        args[1] as! T2,
+                        args[2] as! T3
                     )
                 }
             }
