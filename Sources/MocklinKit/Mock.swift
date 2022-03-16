@@ -247,8 +247,38 @@ public class Mock<Target> {
 
         public func withSignature<T1, T2, T3, R>(_ signature: (Target) -> (T1, T2, T3) -> R) -> SignedVerifyBuilder<(T1, T2, T3) -> R, R> {
             withSignatureBuilder { block in
-                { args in block(args[0] as! T1, args[1] as! T2, args[2] as! T3) }
+                {args in
+                    block(
+                        args[0] as! T1,
+                        cast(args[1]),
+                        cast(args[2])
+                    )
+                }
             }
+        }
+        
+        private func cast<V>(_ value: Any, to type: V.Type = V.self) -> V {
+            let block: @convention(block) (Any) -> Void = { arg in
+                let callback = value as! (Any) -> Void
+                callback(arg)
+            }
+            
+            var blockClass: AnyClass = object_getClass(block)!
+            while blockClass.superclass() != NSObject.self {
+                blockClass = blockClass.superclass()!
+            }
+            
+            if let ns = value as? NSObject {
+                if ns.isKind(of: blockClass) {
+                    return block as! V
+                }
+            }
+            
+            return value as! V
+        }
+        
+        private func isBlock(_ value: Any) -> Void {
+            
         }
 
         public func withSignature<T1, T2, T3, T4, R>(_ signature: (Target) -> (T1, T2, T3, T4) -> R) -> SignedVerifyBuilder<(T1, T2, T3, T4) -> R, R> {
