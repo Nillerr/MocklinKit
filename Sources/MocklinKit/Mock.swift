@@ -9,39 +9,69 @@ public class Mock<Target> {
 
     private var stubs: [Stub] = []
     public private(set) var invocations: [Invocation] = []
+    
+    public init(_ type: Target.Type, class superclass: AnyClass, file: StaticString = #file, line: UInt = #line) {
+        self.type = Target.self
+        
+        self.aClass = objc_allocateClassPair(superclass, "Mocklin<\(Target.self)>_\(UUID().uuidString)", 0)!
+        
+        var count: UInt32 = 0
+        if let cMethodList = class_copyMethodList(aClass, &count) {
+            defer { free(cMethodList) }
+            
+            (0 ..< count)
+                .map { i in cMethodList[Int(i)] }
+                .forEach { cMethod in
+                    let methodDesc = method_getDescription(cMethod)[0]
+                    if let name = methodDesc.name, let types = methodDesc.types.map({ String(cString: $0) }) {
+                        let desc = MethodDescription(name: name, types: types)
+                        let imp = stubImp(for: desc, file: file, line: line)
+                        class_addMethod(aClass, name, imp, types)
+                    }
+                }
+        }
+        
+        objc_registerClassPair(aClass)
+
+        self.target = (aClass.alloc() as! Target)
+    }
 
     public init(_ type: Target.Type, protocol aProtocol: Protocol, file: StaticString = #file, line: UInt = #line) {
         self.type = type
 
-        let protocolName = NSStringFromProtocol(aProtocol)
-        self.aClass = objc_allocateClassPair(NSObject.self, "Mocklin<\(protocolName)>_\(UUID().uuidString)", 0)!
+        self.aClass = objc_allocateClassPair(NSObject.self, "Mocklin<\(String(describing: type))>_\(UUID().uuidString)", 0)!
         class_addProtocol(aClass, aProtocol)
 
         protocol_getMethodDescriptionList(aProtocol)
             .forEach { methodDesc in
-                let imp = imp_implementationWithBlock(for: methodDesc) { [weak self] _, args in
-                    guard let `self` = self else {
-                        fatalError("The mock of type \(protocolName) created in \(file):\(line) was deallocated.")
-                    }
-
-                    let stubOrNil = self.stubs
-                        .filter { stub in stub.selector == methodDesc.name }
-                        .filter { stub in stub.matches(args) }
-                        .first
-
-                    guard let stub = stubOrNil else {
-                        fatalError("A stub for the selector \(methodDesc.name) on the \(protocolName) mock created in \(file):\(line) was not found.")
-                    }
-
-                    return stub.invoke(withArguments: args)
-                }
-
+                let imp = stubImp(for: methodDesc, file: file, line: line)
                 class_addMethod(aClass, methodDesc.name, imp, methodDesc.types)
             }
 
         objc_registerClassPair(aClass)
 
         self.target = (aClass.alloc() as! Target)
+    }
+    
+    private func stubImp(for methodDesc: MethodDescription, file: StaticString = #file, line: UInt = #line) -> IMP {
+        let name = String(describing: type)
+        
+        return imp_implementationWithBlock(for: methodDesc) { [weak self] _, args in
+            guard let `self` = self else {
+                fatalError("The mock of type \(name) created in \(file):\(line) was deallocated.")
+            }
+
+            let stubOrNil = self.stubs
+                .filter { stub in stub.selector == methodDesc.name }
+                .filter { stub in stub.matches(args) }
+                .first
+
+            guard let stub = stubOrNil else {
+                fatalError("A stub for the selector \(methodDesc.name) on the \(name) mock created in \(file):\(line) was not found.")
+            }
+
+            return stub.invoke(withArguments: args)
+        }
     }
 
     deinit {
