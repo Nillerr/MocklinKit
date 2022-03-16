@@ -1,7 +1,7 @@
 import Foundation
 import XCTest
 
-public class Mocklin<Target> {
+public class Mock<Target> {
     private let type: Target.Type
     private let aClass: AnyClass
 
@@ -97,7 +97,7 @@ public class Mocklin<Target> {
     
     public struct SignedGivenBuilder<B, R> {
         public let selector: Selector
-        public let mock: Mocklin<Target>
+        public let mock: Mock<Target>
         public let matchers: [RawMatchable]?
         public let implementation: (B) -> ([Any]) -> R
 
@@ -116,7 +116,7 @@ public class Mocklin<Target> {
 
     public struct GivenBuilder {
         public let selector: Selector
-        public let mock: Mocklin<Target>
+        public let mock: Mock<Target>
         public let matchers: [RawMatchable]?
 
         public func withArguments(_ matchers: RawMatchable...) -> GivenBuilder {
@@ -170,7 +170,7 @@ public class Mocklin<Target> {
 
     public struct SignedVerifyBuilder<B, R> {
         public let selector: Selector
-        public let mock: Mocklin<Target>
+        public let mock: Mock<Target>
         public let matchers: [RawMatchable]?
 
         public func withArguments(_ matchers: RawMatchable...) -> SignedVerifyBuilder<B, R> {
@@ -190,7 +190,7 @@ public class Mocklin<Target> {
 
     public struct VerifyBuilder {
         public let selector: Selector
-        public let mock: Mocklin<Target>
+        public let mock: Mock<Target>
         public let matchers: [RawMatchable]?
 
         public func withArguments(_ matchers: RawMatchable...) -> VerifyBuilder {
@@ -249,12 +249,12 @@ public class Mocklin<Target> {
     }
     
     public struct Stub {
-        let mock: Mocklin<Target>
+        let mock: Mock<Target>
         let selector: Selector
         let matchers: [RawMatchable]?
         let implementation: ([Any]) -> Any
 
-        init(mock: Mocklin<Target>, selector: Selector, matchers: [RawMatchable]?, implementation: @escaping ([Any]) -> Any) {
+        init(mock: Mock<Target>, selector: Selector, matchers: [RawMatchable]?, implementation: @escaping ([Any]) -> Any) {
             self.mock = mock
             self.selector = selector
             self.matchers = matchers
