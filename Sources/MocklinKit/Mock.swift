@@ -288,7 +288,7 @@ public class Mock<Target> {
         public let selector: Selector
         public let arguments: [Any]
 
-        private(set) var isVerified: Bool = false
+        public private(set) var isVerified: Bool = false
 
         internal init(selector: Selector, arguments: [Any]) {
             self.selector = selector
