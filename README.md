@@ -1,3 +1,4 @@
 # MocklinKit
 
-A description of this package.
+An experimental mocking framework used to mock Kotlin Multiplatform 
+dependencies in iOS tests.
