@@ -5,10 +5,10 @@ public class Mock<Target> {
     private let type: Target.Type
     private let aClass: AnyClass
 
-    private(set) var target: Target!
+    public private(set) var target: Target!
 
     private var stubs: [Stub] = []
-    private(set) var invocations: [Invocation] = []
+    public private(set) var invocations: [Invocation] = []
 
     public init(_ type: Target.Type, protocol aProtocol: Protocol, file: StaticString = #file, line: UInt = #line) {
         self.type = type
